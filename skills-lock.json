@@ -1,0 +1,41 @@
+{
+  "version": 1,
+  "skills": {
+    "color-theory-palette-harmony-expert": {
+      "source": "erichowens/some_claude_skills",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/color-theory-palette-harmony-expert/SKILL.md",
+      "computedHash": "2291395477ce9df4a0cc1b46a7fa5c762b73b72ae72c3d59880f0ff36935ee27"
+    },
+    "harmonyos-app": {
+      "source": "majiayu000/claude-arsenal",
+      "sourceType": "github",
+      "skillPath": "skills/harmonyos-app/SKILL.md",
+      "computedHash": "3d2213299c740fcdb4032b6df52a57822a8c40548483e9178d98dd51b0f1e766"
+    },
+    "harmonyos-build-deploy": {
+      "source": "fadinglight9291117/arkts_skills",
+      "sourceType": "github",
+      "skillPath": "harmonyos-build-deploy/SKILL.md",
+      "computedHash": "14ea42891358f7e0747e6fa141f183e93d2fb0e12ad3898f3a8cf6731e7872b5"
+    },
+    "harmonyos-dev": {
+      "source": "coreylyn/harmonyos-skills",
+      "sourceType": "github",
+      "skillPath": "skills/harmonyos-dev/SKILL.md",
+      "computedHash": "59f3f037f2a6d4a927bd25ee5ccb60adfb81413aa12704ced13571ac00872e5f"
+    },
+    "harmonyos-device-automation": {
+      "source": "web-infra-dev/midscene-skills",
+      "sourceType": "github",
+      "skillPath": "skills/harmony-automation/SKILL.md",
+      "computedHash": "20227074a11b45c7909d3af5e12214d27543eac773e708bd7d49a23f60fb8d72"
+    },
+    "oh-ut-generator": {
+      "source": "openharmonyinsight/openharmony-skills",
+      "sourceType": "github",
+      "skillPath": "skills/oh-ut-generator/SKILL.md",
+      "computedHash": "3759dee9a2f67ef610cc89f50dad5775fe7f526e6714ce575b7d3c0373cc4b4e"
+    }
+  }
+}

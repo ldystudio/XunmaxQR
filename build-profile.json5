@@ -1,0 +1,57 @@
+{
+  "app": {
+    "signingConfigs": [
+      {
+        "name": "default",
+        "type": "HarmonyOS",
+        "material": {
+          "certpath": "/Users/ldystudio/.ohos/config/default_XunmaxQR_3W-875VHbJ8AH1OL-Zzf2qq703RurWkwGgSsvJwJuMw=.cer",
+          "keyAlias": "debugKey",
+          "keyPassword": "0000001BF37CA0146EB4DD528AFFA14D8D71014CC8BC00BFFE863B4F7554430E89169AFEB0757D5D79F453",
+          "profile": "/Users/ldystudio/.ohos/config/default_XunmaxQR_3W-875VHbJ8AH1OL-Zzf2qq703RurWkwGgSsvJwJuMw=.p7b",
+          "signAlg": "SHA256withECDSA",
+          "storeFile": "/Users/ldystudio/.ohos/config/default_XunmaxQR_3W-875VHbJ8AH1OL-Zzf2qq703RurWkwGgSsvJwJuMw=.p12",
+          "storePassword": "0000001B4156DC649EBE3E7AB3871DEF9ADCF7D7B0899133AACC03A8D30D928D83D7CB8A04D2F327BEF25A"
+        }
+      }
+    ],
+    "products": [
+      {
+        "name": "default",
+        "signingConfig": "default",
+        "compileSdkVersion": "6.1.1(24)",
+        "targetSdkVersion": "6.1.1(24)",
+        "compatibleSdkVersion": "6.1.1(24)",
+        "runtimeOS": "HarmonyOS",
+        "buildOption": {
+          "strictMode": {
+            "caseSensitiveCheck": true,
+            "useNormalizedOHMUrl": true
+          }
+        }
+      }
+    ],
+    "buildModeSet": [
+      {
+        "name": "debug",
+      },
+      {
+        "name": "release"
+      }
+    ]
+  },
+  "modules": [
+    {
+      "name": "entry",
+      "srcPath": "./entry",
+      "targets": [
+        {
+          "name": "default",
+          "applyToProducts": [
+            "default"
+          ]
+        }
+      ]
+    }
+  ]
+}

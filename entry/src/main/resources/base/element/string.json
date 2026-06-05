@@ -1,0 +1,16 @@
+{
+  "string": [
+    {
+      "name": "module_desc",
+      "value": "讯美门禁入口模块"
+    },
+    {
+      "name": "EntryAbility_desc",
+      "value": "讯美门禁二维码"
+    },
+    {
+      "name": "EntryAbility_label",
+      "value": "讯美门禁"
+    }
+  ]
+}
