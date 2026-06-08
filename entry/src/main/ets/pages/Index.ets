@@ -4,6 +4,9 @@ import { SymbolGlyphModifier } from '@kit.ArkUI';
 import { UserInfo } from '../model/XmTypes';
 import { AuthSnapshot, xmApi } from '../service/XmApi';
 import { sha256Hex } from '../util/Sha256';
+import { MyPage } from './MyPage';
+import { QrPage } from './QrPage';
+import { WebPage } from './WebPage';
 
 const AUTH_STORE = 'xunmax_auth_store';
 const KEY_TOKEN = 'token';
@@ -15,6 +18,7 @@ const KEY_USER_PHONE = 'userPhone';
 const KEY_USER_AVATAR = 'userAvatar';
 const QR_TAB = 0;
 const MY_TAB = 1;
+const WEB_TAB = 2;
 
 @Entry
 @Component
@@ -167,7 +171,7 @@ struct Index {
       return;
     }
     this.qrCode = topKey.webQRCode;
-    this.qrMessage = '二维码已刷新';
+    this.qrMessage = topKey.webQRCode;
   }
 
   logout(): void {
@@ -192,17 +196,63 @@ struct Index {
       this.buildBackground()
 
       Column() {
-        this.buildHeader()
+        if (this.currentTab !== WEB_TAB) {
+          this.buildHeader()
+        }
         HdsTabs({ barPosition: BarPosition.End, index: this.currentTab, controller: this.tabsController }) {
           TabContent() {
-            this.buildQrPage()
+            QrPage({
+              qrCode: this.qrCode,
+              qrMessage: this.qrMessage,
+              isLoggedIn: this.isLoggedIn,
+              isLoading: this.isLoading,
+              onRefresh: () => {
+                this.getQrCode();
+              }
+            })
           }
           .tabBar(this.createBottomTab(this.createSymbol('qrcode'), '二维码'))
 
           TabContent() {
-            this.buildMyPage()
+            MyPage({
+              isLoggedIn: this.isLoggedIn,
+              isLoading: this.isLoading,
+              phone: this.phone,
+              pictureCode: this.pictureCode,
+              smsCode: this.smsCode,
+              pictureImage: this.pictureImage,
+              userName: this.userName,
+              userPhone: this.userPhone,
+              userAvatar: this.userAvatar,
+              qrCredentialText: xmApi.getQrRequestCredentialText(),
+              onPhoneChange: (value: string) => {
+                this.phone = value;
+              },
+              onPictureCodeChange: (value: string) => {
+                this.pictureCode = value;
+              },
+              onSmsCodeChange: (value: string) => {
+                this.smsCode = value;
+              },
+              onGetPictureCode: () => {
+                this.getPictureCode();
+              },
+              onVerifyPictureAndSendSms: () => {
+                this.verifyPictureAndSendSms();
+              },
+              onLogin: () => {
+                this.login();
+              },
+              onOpenQr: () => this.openQrPage(),
+              onLogout: () => this.logout()
+            })
           }
           .tabBar(this.createBottomTab(this.createSymbol('person'), '我的'))
+
+          TabContent() {
+            WebPage({ bottomRectHeight: this.bottomRectHeight })
+          }
+          .tabBar(this.createBottomTab(this.createSymbol('worldclock'), '网页'))
         }
         .layoutWeight(1)
         .barPosition(BarPosition.End)
@@ -284,258 +334,6 @@ struct Index {
       left: 24,
       right: 24,
       top: 20
-    })
-  }
-
-  @Builder
-  buildQrPage() {
-    Column() {
-      Blank().layoutWeight(1)
-
-      Column({ space: 22 }) {
-        Stack() {
-          Column() {
-          }
-          .width(286)
-          .height(286)
-          .borderRadius(34)
-          .backgroundColor($r('sys.color.comp_background_list_card'))
-          .shadow({
-            radius: 26,
-            color: $r('sys.color.ohos_id_shadow_default_lg'),
-            offsetX: 0,
-            offsetY: 10
-          })
-
-          if (this.qrCode.length > 0) {
-            QRCode(this.qrCode)
-              .width(240)
-              .height(240)
-              .color(Color.Black)
-              .backgroundColor(Color.White)
-              .borderRadius(20)
-          } else {
-            Column({ space: 10 }) {
-              Text('门禁二维码')
-                .fontSize(22)
-                .fontWeight(FontWeight.Bold)
-                .fontColor('#172018')
-              Text(this.isLoggedIn ? '点击下方按钮获取' : '请先登录')
-                .fontSize(14)
-                .fontColor('#7C8178')
-            }
-          }
-        }
-        .width('100%')
-        .height(300)
-        .alignContent(Alignment.Center)
-
-        Text(this.qrMessage)
-          .fontSize(14)
-          .fontColor('#667061')
-          .textAlign(TextAlign.Center)
-          .maxLines(2)
-
-        Button(this.isLoading ? '刷新中...' : '刷新二维码')
-          .width(188)
-          .height(50)
-          .type(ButtonType.Capsule)
-          .fontSize(16)
-          .fontWeight(FontWeight.Medium)
-          .fontColor(Color.White)
-          .backgroundColor('#172018')
-          .enabled(!this.isLoading && this.isLoggedIn)
-          .onClick(() => this.getQrCode())
-      }
-
-      Blank().layoutWeight(1)
-    }
-    .width('100%')
-    .height('100%')
-  }
-
-  @Builder
-  buildMyPage() {
-    Column({ space: 16 }) {
-      if (this.isLoggedIn) {
-        this.buildProfileCard()
-      } else {
-        this.buildLoginCard()
-      }
-    }
-    .width('100%')
-    .padding({
-      left: 20,
-      right: 20,
-    })
-  }
-
-  @Builder
-  buildProfileCard() {
-    Column({ space: 18 }) {
-      Row({ space: 14 }) {
-        if (this.userAvatar.length > 0) {
-          Image(this.userAvatar)
-            .width(58)
-            .height(58)
-            .borderRadius(18)
-            .objectFit(ImageFit.Cover)
-        } else {
-          Text('我')
-            .width(58)
-            .height(58)
-            .borderRadius(18)
-            .backgroundColor('#172018')
-            .fontColor('#FFFFFF')
-            .fontSize(24)
-            .fontWeight(FontWeight.Bold)
-            .textAlign(TextAlign.Center)
-        }
-
-        Column({ space: 5 }) {
-          Text(this.userName.length > 0 ? this.userName : '讯美用户')
-            .fontSize(21)
-            .fontWeight(FontWeight.Bold)
-            .fontColor('#172018')
-            .width('100%')
-          Text(this.userPhone.length > 0 ? this.userPhone : this.phone)
-            .fontSize(14)
-            .fontColor('#667061')
-            .width('100%')
-        }
-        .alignItems(HorizontalAlign.Start)
-        .layoutWeight(1)
-      }
-      .width('100%')
-
-      Button('查看二维码')
-        .width('100%')
-        .height(48)
-        .type(ButtonType.Capsule)
-        .onClick(() => {
-          this.switchToQr();
-          if (this.qrCode.length === 0) {
-            this.getQrCode();
-          }
-        })
-
-      Button('退出登录')
-        .width('100%')
-        .height(48)
-        .type(ButtonType.Capsule)
-        .fontColor($r('sys.color.font_primary'))
-        .backgroundColor($r('sys.color.hms_actionbar_nonprimary_button_color'))
-        .onClick(() => {
-          this.logout();
-        })
-    }
-    .width('100%')
-    .padding(18)
-    .borderRadius(30)
-    .backgroundColor($r('sys.color.comp_background_list_card'))
-  }
-
-  @Builder
-  buildLoginCard() {
-    Column({ space: 14 }) {
-      Text('手机号登录')
-        .fontSize(22)
-        .fontWeight(FontWeight.Bold)
-        .fontColor('#172018')
-        .width('100%')
-
-      TextInput({ placeholder: '手机号', text: this.phone })
-        .type(InputType.PhoneNumber)
-        .height(50)
-        .borderRadius(18)
-        .backgroundColor('#F3EFE5')
-        .placeholderColor('#7C8178')
-        .fontColor('#172018')
-        .padding({ left: 16, right: 16 })
-        .onChange((value: string) => {
-          this.phone = value;
-        })
-
-      Button('1. 获取图形验证码')
-        .width('100%')
-        .height(46)
-        .type(ButtonType.Capsule)
-        .fontColor('#FFFFFF')
-        .backgroundColor('#172018')
-        .enabled(!this.isLoading)
-        .onClick(() => {
-          this.getPictureCode();
-        })
-
-      if (this.pictureImage.length > 0) {
-        Row({ space: 10 }) {
-          Image(this.pictureImage)
-            .width(142)
-            .height(48)
-            .objectFit(ImageFit.Contain)
-            .borderRadius(16)
-            .backgroundColor('#F3EFE5')
-
-          TextInput({ placeholder: '图形验证码', text: this.pictureCode })
-            .layoutWeight(1)
-            .height(48)
-            .borderRadius(16)
-            .backgroundColor('#F3EFE5')
-            .placeholderColor('#7C8178')
-            .fontColor('#172018')
-            .padding({ left: 14, right: 14 })
-            .onChange((value: string) => {
-              this.pictureCode = value.toUpperCase();
-            })
-        }
-        .width('100%')
-      }
-
-      Button('2. 校验图形码并发短信')
-        .width('100%')
-        .height(46)
-        .type(ButtonType.Capsule)
-        .fontColor('#172018')
-        .backgroundColor('#D9E8D2')
-        .enabled(!this.isLoading)
-        .onClick(() => {
-          this.verifyPictureAndSendSms();
-        })
-
-      TextInput({ placeholder: '短信验证码', text: this.smsCode })
-        .type(InputType.Number)
-        .height(50)
-        .borderRadius(18)
-        .backgroundColor('#F3EFE5')
-        .placeholderColor('#7C8178')
-        .fontColor('#172018')
-        .padding({ left: 16, right: 16 })
-        .onChange((value: string) => {
-          this.smsCode = value;
-        })
-
-      Button('3. 登录')
-        .width('100%')
-        .height(50)
-        .type(ButtonType.Capsule)
-        .fontSize(16)
-        .fontWeight(FontWeight.Medium)
-        .fontColor('#FFFFFF')
-        .backgroundColor('#172018')
-        .enabled(!this.isLoading)
-        .onClick(() => {
-          this.login();
-        })
-    }
-    .width('100%')
-    .padding(20)
-    .borderRadius(30)
-    .backgroundColor($r('sys.color.comp_background_list_card'))
-    .shadow({
-      radius: 22,
-      color: $r('sys.color.ohos_id_shadow_default_md'),
-      offsetX: 0,
-      offsetY: 8
     })
   }
 
@@ -655,7 +453,7 @@ struct Index {
     this.tabsController.changeIndex(MY_TAB);
   }
 
-  private switchToQr(): void {
+  private openQrPage(): void {
     if (!this.isLoggedIn) {
       this.switchToMy();
       this.statusMessage = '请先登录，再查看二维码';
@@ -663,9 +461,12 @@ struct Index {
     }
     this.currentTab = QR_TAB;
     this.tabsController.changeIndex(QR_TAB);
+    if (this.qrCode.length === 0) {
+      this.getQrCode();
+    }
   }
 
-  private createSymbol(name: 'qrcode' | 'person'): TabBarSymbol {
+  private createSymbol(name: 'qrcode' | 'person' | 'worldclock'): TabBarSymbol {
     const normal = new SymbolGlyphModifier($r(`sys.symbol.${name}`))
       .fontColor(['#6D776A'])
       .fontSize(24);

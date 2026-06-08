@@ -13,6 +13,7 @@ import {
 const BASE_URL = 'https://xunmei.zuolin.com';
 const DEFAULT_REFERER = `${BASE_URL}/`;
 const QR_REFERER = `${BASE_URL}/entrance-guard/build/index.html`;
+const QR_PATH = '/evh/aclink/listDoorAccessQRKeyNew';
 const SUCCESS_CODES: Array<number> = [200, 201, 202, 204];
 const REQUEST_TIMEOUT = 10000;
 const FORM_BOUNDARY = '----XunmaxQrHarmonyBoundary';
@@ -30,8 +31,9 @@ interface FormBody {
 }
 
 interface HeaderBody {
+  'Accept'?: string;
   'Content-Type'?: string;
-  'Origin': string;
+  'Origin'?: string;
   'Referer': string;
   'Cookie'?: string;
   'Authorization'?: string;
@@ -97,6 +99,8 @@ export class XmApi {
     }, 'captureLoginCookie');
     if (result.data?.loginToken) {
       this.token = result.data.loginToken;
+      this.upsertCookie('token', result.data.loginToken);
+      this.upsertCookie('namespace_id', '999920');
     }
     return result;
   }
@@ -106,7 +110,7 @@ export class XmApi {
   }
 
   async listDoorAccessQRKeyNew(): Promise<RequestResult<DoorAccessQrResponse>> {
-    return this.getProtected<DoorAccessQrResponse>('/evh/aclink/listDoorAccessQRKeyNew', QR_REFERER);
+    return this.getQrWithCookie<DoorAccessQrResponse>();
   }
 
   getDebugAuth(): string {
@@ -127,6 +131,12 @@ export class XmApi {
       cookieHeader: this.getCookieHeader(),
       authMode: this.authMode
     };
+  }
+
+  getQrRequestCredentialText(): string {
+    const cookieHeader = this.getCookieHeader();
+    const cookie = cookieHeader.length > 0 ? cookieHeader : '空';
+    return `GET ${BASE_URL}${QR_PATH}\nContent-Type: application/x-www-form-urlencoded\nOrigin: ${DEFAULT_REFERER}\nReferer: ${QR_REFERER}\nCookie: ${cookie}`;
   }
 
   restoreAuth(snapshot: AuthSnapshot): void {
@@ -188,6 +198,33 @@ export class XmApi {
     return this.createNetworkError<T>(new Error('No auth mode available'));
   }
 
+  private async getQrWithCookie<T>(): Promise<RequestResult<T>> {
+    if (this.getCookieHeader().length === 0) {
+      return this.createNetworkError<T>(new Error('No cookie credentials available'));
+    }
+
+    const request = http.createHttp();
+    try {
+      const response = await request.request(`${BASE_URL}${QR_PATH}`, {
+        method: http.RequestMethod.GET,
+        expectDataType: http.HttpDataType.STRING,
+        header: this.createQrHeaders(),
+        connectTimeout: REQUEST_TIMEOUT,
+        readTimeout: REQUEST_TIMEOUT
+      });
+      this.captureResponseCookies(response);
+      const result = this.handleResponse<T>(response);
+      if (!result.error) {
+        this.authMode = 'cookie';
+      }
+      return result;
+    } catch (error) {
+      return this.createNetworkError<T>(error as Object);
+    } finally {
+      request.destroy();
+    }
+  }
+
   private async getWithMode<T>(path: string, referer: string, authMode: AuthMode): Promise<RequestResult<T>> {
     const request = http.createHttp();
     try {
@@ -245,6 +282,16 @@ export class XmApi {
       return this.createTypedHeaders(contentType, referer, authMode, hasCookie, hasToken);
     }
     return this.createTypedHeadersWithoutContentType(referer, authMode, hasCookie, hasToken);
+  }
+
+  private createQrHeaders(): HeaderBody {
+    return {
+      'Accept': 'application/json, text/plain, */*',
+      'Content-Type': 'application/x-www-form-urlencoded',
+      'Origin': DEFAULT_REFERER,
+      'Referer': QR_REFERER,
+      'Cookie': this.getCookieHeader()
+    };
   }
 
   private createTypedHeaders(
